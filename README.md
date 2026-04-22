@@ -4,6 +4,8 @@
 
 https://heart-disease-ml-fkkap32gcvmdebp4mdnfuy.streamlit.app
 
+https://web-production-2713e.up.railway.app
+
 This project builds an end-to-end machine learning pipeline to predict heart disease risk using clinical data.
 
 Instead of just training a model, this project delivers a **working product**:
