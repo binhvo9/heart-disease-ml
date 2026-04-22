@@ -185,3 +185,25 @@ def predict_get(
         "threshold": THRESHOLD,
         "risk_level": risk_label,
     }
+
+
+@app.get("/sample_predictions")
+def sample_predictions():
+    samples = [
+        {"age": 45, "sex": 1, "cp": 2, "trestbps": 130, "chol": 250, "fbs": 0, "thalach": 150, "exang": 0, "oldpeak": 1.0, "restecg": 1, "slope": 1, "ca": 0, "thal": 2},
+        {"age": 60, "sex": 1, "cp": 3, "trestbps": 150, "chol": 300, "fbs": 1, "thalach": 120, "exang": 1, "oldpeak": 3.5, "restecg": 2, "slope": 2, "ca": 3, "thal": 3},
+        {"age": 50, "sex": 0, "cp": 1, "trestbps": 120, "chol": 220, "fbs": 0, "thalach": 160, "exang": 0, "oldpeak": 0.5, "restecg": 0, "slope": 1, "ca": 0, "thal": 2}
+    ]
+
+    results = []
+    for s in samples:
+        payload = PatientInput(**s)
+        df = make_input_df(payload)
+        proba = float(model.predict_proba(df)[0][1])
+        risk = risk_label_from_proba(proba)
+
+        s["probability"] = round(proba, 4)
+        s["risk_level"] = risk
+        results.append(s)
+
+    return results
