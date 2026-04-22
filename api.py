@@ -127,3 +127,61 @@ def predict(payload: PatientInput):
         "risk_level": risk_label,
         "input": payload.model_dump(),
     }
+
+
+@app.get("/predict_get")
+def predict_get(
+    age: int,
+    sex: int,
+    cp: int,
+    trestbps: int,
+    chol: int,
+    fbs: int,
+    thalach: int,
+    exang: int,
+    oldpeak: float,
+    restecg: int,
+    slope: int,
+    ca: int,
+    thal: int,
+):
+    payload = PatientInput(
+        age=age,
+        sex=sex,
+        cp=cp,
+        trestbps=trestbps,
+        chol=chol,
+        fbs=fbs,
+        thalach=thalach,
+        exang=exang,
+        oldpeak=oldpeak,
+        restecg=restecg,
+        slope=slope,
+        ca=ca,
+        thal=thal,
+    )
+
+    input_df = make_input_df(payload)
+    proba = float(model.predict_proba(input_df)[0][1])
+    pred_class = int(proba >= THRESHOLD)
+    risk_label = risk_label_from_proba(proba)
+
+    return {
+        "age": age,
+        "sex": sex,
+        "cp": cp,
+        "trestbps": trestbps,
+        "chol": chol,
+        "fbs": fbs,
+        "thalach": thalach,
+        "exang": exang,
+        "oldpeak": oldpeak,
+        "restecg": restecg,
+        "slope": slope,
+        "ca": ca,
+        "thal": thal,
+        "probability": round(proba, 4),
+        "predicted_class": pred_class,
+        "threshold": THRESHOLD,
+        "risk_level": risk_label,
+    }
