@@ -8,27 +8,32 @@ st.set_page_config(
     layout="centered"
 )
 
-# ===== Load model =====
+THRESHOLD = 0.20
+
+# ===== Load artifact =====
 @st.cache_resource
-def load_model():
+def load_artifact():
     return joblib.load("heart_rf_pipeline.pkl")
 
-bundle = load_model()
+artifact = load_artifact()
 
-# support cả 2 kiểu:
-# 1) save cả dict {'model':..., ...}
-# 2) save trực tiếp pipeline/model
-if isinstance(bundle, dict) and "model" in bundle:
-    model = bundle["model"]
-    feature_columns = bundle.get("feature_columns", [])
-    categorical_columns = bundle.get("categorical_columns", [])
+# support 2 kiểu save:
+# 1) dict artifact: {"model": ..., "feature_columns": ..., "categorical_columns": ...}
+# 2) save trực tiếp model
+if isinstance(artifact, dict) and "model" in artifact:
+    model = artifact["model"]
+    feature_columns = artifact.get("feature_columns", [])
+    categorical_columns = artifact.get(
+        "categorical_columns",
+        ["cp", "restecg", "slope", "ca", "thal"]
+    )
 else:
-    model = bundle
+    model = artifact
     feature_columns = []
+    categorical_columns = ["cp", "restecg", "slope", "ca", "thal"]
 
 st.title("❤️ Heart Disease Risk Predictor")
 st.caption("Simple ML demo for portfolio")
-
 st.markdown("### Enter patient data")
 
 # ===== Inputs =====
@@ -46,11 +51,11 @@ slope = st.selectbox("Slope", [0, 1, 2])
 ca = st.selectbox("Number of Major Vessels (ca)", [0, 1, 2, 3, 4])
 thal = st.selectbox("Thal", [0, 1, 2, 3])
 
-# map sex text -> model value
+# map sex text -> numeric
 sex_value = 1 if sex == "Male" else 0
 
-# ===== Build input row =====
-input_data = pd.DataFrame([{
+# ===== Build raw input =====
+raw_input = pd.DataFrame([{
     "age": age,
     "sex": sex_value,
     "cp": cp,
@@ -71,8 +76,18 @@ st.markdown("---")
 # ===== Predict =====
 if st.button("Predict Risk"):
     try:
+        input_data = raw_input.copy()
+
+        # nếu model train trên encoded columns thì encode + align
+        if feature_columns:
+            input_data[categorical_columns] = input_data[categorical_columns].astype(str)
+            input_data = pd.get_dummies(input_data, columns=categorical_columns)
+
+            # align đúng columns lúc train
+            input_data = input_data.reindex(columns=feature_columns, fill_value=0)
+
         proba = model.predict_proba(input_data)[0][1]
-        pred = int(proba >= 0.20)   # threshold m đang xài, sửa nếu muốn
+        pred = int(proba >= THRESHOLD)
 
         if proba < 0.20:
             risk_label = "Low Risk"
@@ -87,9 +102,12 @@ if st.button("Predict Risk"):
         st.subheader("Prediction Result")
         st.metric("Heart Disease Probability", f"{proba:.1%}")
         st.write(f"**Risk Level:** {risk_emoji} {risk_label}")
-        st.write(f"**Predicted Class (threshold = 0.20):** {pred}")
+        st.write(f"**Predicted Class (threshold = {THRESHOLD:.2f}):** {pred}")
 
-        with st.expander("View input data"):
+        with st.expander("View raw input"):
+            st.dataframe(raw_input, use_container_width=True)
+
+        with st.expander("View model input"):
             st.dataframe(input_data, use_container_width=True)
 
     except Exception as e:
