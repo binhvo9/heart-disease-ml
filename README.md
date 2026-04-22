@@ -2,6 +2,8 @@
 
 ## 🚀 Overview
 
+https://heart-disease-ml-fkkap32gcvmdebp4mdnfuy.streamlit.app
+
 This project builds an end-to-end machine learning pipeline to predict heart disease risk using clinical data.
 
 Instead of just training a model, this project delivers a **working product**:
@@ -9,6 +11,10 @@ Instead of just training a model, this project delivers a **working product**:
 * ML model (Random Forest)
 * Saved pipeline (.pkl)
 * Interactive Streamlit UI
+![Demo](assets/demo.png)
+![Demo](assets/demo2.png)
+
+
 
 ---
 
