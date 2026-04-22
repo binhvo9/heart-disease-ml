@@ -1,4 +1,7 @@
 streamlit
-pandas
-scikit-learn
+fastapi
+uvicorn
 joblib
+scikit-learn
+pandas
+pydantic
